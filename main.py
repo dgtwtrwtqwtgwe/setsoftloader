@@ -1,29 +1,19 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import WebAppInfo
-from aiogram.filters import Command
-from aiohttp import web
-import asyncio
-import logging
+from flask import Flask, request, jsonify
 import requests
-import json
 import os
 from dotenv import load_dotenv
+import telebot
 
-# Настройки
-API_TOKEN = "8460820194:AAHaqb2bsLGaH1BMGuuK80F7l2YI0TTExDc"  # Токен бота от @BotFather
-ATLAS_TOKEN = "5486553522:1PL3JMD1AB"  # Ваш токен Atlas
-ATLAS_URL = "https://api.atlass.digital"
 load_dotenv()
-tokened = os.getenv('BOT_TOKEN')
-# Инициализация бота
-bot = Bot(token=tokened)
-dp = Dispatcher()
+app = Flask(__name__)
 
-# Хранилище для данных (в продакшене используйте БД)
-requests_data = {}
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+ATLAS_TOKEN = "5486553522:1PL3JMD1AB"
 
-async def handle_atlas_request(data):
-    """Обработка запросов к Atlas API"""
+bot = telebot.TeleBot(BOT_TOKEN)
+ATLAS_URL = "https://api.atlass.digital"
+
+def handle_atlas_request(data):
     try:
         headers = {"Content-Type": "application/json"}
         payload = {
@@ -38,68 +28,38 @@ async def handle_atlas_request(data):
     except Exception as e:
         return {"error": str(e)}
 
-# HTTP API endpoints
-async def handle_search(request):
-    """Обработчик поисковых запросов"""
+@app.route('/api/search', methods=['POST'])
+def handle_search():
     try:
-        data = await request.json()
+        data = request.get_json()
         required_fields = ['type', 'search']
         
         if not all(field in data for field in required_fields):
-            return web.json_response({"error": "Missing required fields"}, status=400)
+            return jsonify({"error": "Missing required fields"}), 400
         
-        # Валидация типа поиска
         valid_types = ['email', 'ip', 'phone', 'fio']
         if data['type'] not in valid_types:
-            return web.json_response({"error": "Invalid search type"}, status=400)
+            return jsonify({"error": "Invalid search type"}), 400
         
-        # Отправляем запрос в Atlas
-        result = await handle_atlas_request(data)
-        return web.json_response(result)
+        result = handle_atlas_request(data)
+        return jsonify(result)
         
     except Exception as e:
-        return web.json_response({"error": f"Internal server error: {str(e)}"}, status=500)
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-async def health_check(request):
-    """Проверка работоспособности API"""
-    return web.json_response({"status": "ok", "service": "Atlas API Bot"})
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "ok", "service": "Atlas API Bot"})
 
-# Команды бота
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    await message.answer(
-        "🤖 Atlas API Bot\n\n"
-        "Этот бот предоставляет безопасный доступ к Atlas API.\n"
-        "Используйте HTTP запросы к нашему API endpoint."
-    )
+@bot.message_handler(commands=['start'])
+def cmd_start(message):
+    bot.send_message(message.chat.id, "🤖 Atlas API Bot\n\nЭтот бот предоставляет безопасный доступ к Atlas API.")
 
-def setup_routes(app):
-    """Настройка маршрутов API"""
-    app.router.add_post('/api/search', handle_search)
-    app.router.add_get('/health', health_check)
-
-async def start_bot():
-    """Запуск бота и веб-сервера"""
-    # Запускаем поллинг бота в фоне
-    bot_task = asyncio.create_task(dp.start_polling(bot))
-    
-    # Создаем и запускаем веб-сервер
-    app = web.Application()
-    setup_routes(app)
-    
-    runner = web.AppRunner(app)
-    await runner.setup()
-    
-    site = web.TCPSite(runner, '0.0.0.0', 8080)
-    await site.start()
-    
-    print("🚀 API Bot запущен!")
-    print("📡 HTTP сервер слушает на порту 8080")
-    print("🔗 Endpoint: POST http://your-host:8080/api/search")
-    
-    # Ожидаем завершения обеих задач
-    await bot_task
+def run_bot():
+    bot.polling(none_stop=True)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(start_bot())
+    from threading import Thread
+    bot_thread = Thread(target=run_bot)
+    bot_thread.start()
+    app.run(host='0.0.0.0', port=8080)
