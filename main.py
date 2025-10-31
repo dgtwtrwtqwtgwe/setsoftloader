@@ -6,6 +6,7 @@ import asyncio
 import logging
 import requests
 import json
+import os
 
 # Настройки
 API_TOKEN = "8460820194:AAHaqb2bsLGaH1BMGuuK80F7l2YI0TTExDc"  # Токен бота от @BotFather
@@ -13,7 +14,7 @@ ATLAS_TOKEN = "5486553522:1PL3JMD1AB"  # Ваш токен Atlas
 ATLAS_URL = "https://api.atlass.digital"
 
 # Инициализация бота
-bot = Bot(token=API_TOKEN)
+bot = Bot(os.getenv('BOT_TOKEN'))
 dp = Dispatcher()
 
 # Хранилище для данных (в продакшене используйте БД)
