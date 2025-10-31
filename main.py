@@ -7,6 +7,7 @@ import logging
 import requests
 import json
 import os
+from dotenv import load_dotenv
 
 # Настройки
 API_TOKEN = "8460820194:AAHaqb2bsLGaH1BMGuuK80F7l2YI0TTExDc"  # Токен бота от @BotFather
