@@ -28,10 +28,16 @@ def handle_atlas_request(data):
     except Exception as e:
         return {"error": str(e)}
 
-@app.route('/api/search', methods=['POST'])
+@app.route('/api/search', methods=['POST', 'GET'])
 def handle_search():
     try:
+        if request.method == 'GET':
+            return jsonify({"status": "Use POST method"})
+            
         data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+            
         required_fields = ['type', 'search']
         
         if not all(field in data for field in required_fields):
@@ -51,15 +57,13 @@ def handle_search():
 def health_check():
     return jsonify({"status": "ok", "service": "Atlas API Bot"})
 
+@app.route('/test', methods=['GET'])
+def test_route():
+    return jsonify({"message": "API is working", "test": "success"})
+
 @bot.message_handler(commands=['start'])
 def cmd_start(message):
     bot.send_message(message.chat.id, "🤖 Atlas API Bot\n\nЭтот бот предоставляет безопасный доступ к Atlas API.")
 
-def run_bot():
-    bot.polling(none_stop=True)
-
 if __name__ == "__main__":
-    from threading import Thread
-    bot_thread = Thread(target=run_bot)
-    bot_thread.start()
     app.run(host='0.0.0.0', port=8080)
