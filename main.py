@@ -12,9 +12,9 @@ import os
 API_TOKEN = "8460820194:AAHaqb2bsLGaH1BMGuuK80F7l2YI0TTExDc"  # Токен бота от @BotFather
 ATLAS_TOKEN = "5486553522:1PL3JMD1AB"  # Ваш токен Atlas
 ATLAS_URL = "https://api.atlass.digital"
-
+tokened = os.getenv('BOT_TOKEN')
 # Инициализация бота
-bot = Bot(os.getenv('BOT_TOKEN'))
+bot = Bot(token=tokened)
 dp = Dispatcher()
 
 # Хранилище для данных (в продакшене используйте БД)
