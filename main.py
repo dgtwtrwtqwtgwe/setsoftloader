@@ -8,7 +8,7 @@ import requests
 import json
 
 # Настройки
-API_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Токен бота от @BotFather
+API_TOKEN = "8460820194:AAHaqb2bsLGaH1BMGuuK80F7l2YI0TTExDc"  # Токен бота от @BotFather
 ATLAS_TOKEN = "5486553522:1PL3JMD1AB"  # Ваш токен Atlas
 ATLAS_URL = "https://api.atlass.digital"
 
